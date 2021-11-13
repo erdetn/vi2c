@@ -1,8 +1,8 @@
 Module {
-	name: 'i2c',
-	description: 'Tiny I2C communication wrapper writen in V.',
+	name: 'vi2c',
+	description: 'A tiny I2C communication library writen in V.',
 	dependencies: [],
 	author: 'Erdet Nasufi, erdetn',
-	version: '0.1',
+	version: '1.0',
 	repo_url: 'https://github.com/erdetn/vi2c'
 }
