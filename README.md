@@ -1,46 +1,170 @@
 # vi2c
-**vi2c** is a tiny I2C communication library written in V.
+`vi2c` is a tiny I2C communication library written in V.
 
-`vi2c` provides the constructor function `vi2c.new(...)` which returns a new object of type `I2CDevice`; `connect()` and `disconnect` functions to open and close the i2c connection, and `read_` and `write_` functions as following:
-- `read_data(max_length int) (int, []byte)`
-- `write_data(data []byte) u32`
-- `read_data_from_reg(reg byte, max_length int)(int, []byte)`
-- `read_reg(reg byte)(int, []byte)`
-- `write_reg_data(reg byte, data []byte) u32`
-- `write_reg(reg byte, value byte) u32`
+# Documentation
 
-The constructor function - `new(...)` requires: the device filename of the I2C port where the I2C slave device is connected, I2C address of the slave device, and the device - which is more descriptive and doesn't have any implication on the logic.
+```struct I2CDevice```
 
-```
-mut ic2_dev := i2c.new('/dev/i2c-9', 0x48, 'Temp sensor')
-```
+Represents an I2C device.
+Fields:
 
-## Demo
+* `m_fd (int)`: File descriptor (-1 if not open).
+* `m_name (string)`: Name of the device.
+* `m_device_address (u8)`: I2C device address.
+* `m_device_filename (string)`: File path of the I2C device.
+* `m_is_connected (bool)`: Indicates if the device is connected.
+* `m_is_forced (bool)`: Indicates if the connection was forced.
 
-Output of `$v run test_i2c_comm.v` command.
-```
-{
-	name:         Temp sensor,
-	address:      0x48,
-	filename:     /dev/i2c-9,
-	is_connected: false
+
+## Functions
+
+#### Function ```new(filename string, address u8, name string) I2CDevice```
+
+Creates a new I2CDevice instance.
+
+* `filename (string)`: File path of the I2C device.
+* `address (u8)`: I2C device address.
+* `name (string)`: Name of the device.
+
+____
+#### Function ```connect(force_connection bool) bool```
+
+Connects to the I2C device.
+
+* `force_connection (bool)`: Indicates if the connection should be forced. Force (or not) using this slave address, even if it is already in use by a driver.
+
+Returns `true` if the connection is successful, otherwise `false`.
+____
+#### Function ```read_data(max_length int) (int, []u8)```
+
+Reads data from the I2C device.
+
+* `max_length (int)`: Maximum length of data to read.
+
+Returns the number of bytes read and the data as a byte slice.
+____
+#### Function ```write_data(data []u8) u32```
+
+Writes data to the I2C device.
+
+* `data ([]u8)`: Data to write.
+
+Returns the number of bytes written.
+____
+#### Function ```read_data_from_reg(reg u8, max_length int) (int, []u8)```
+
+Reads data from a register of the I2C device.
+
+* `reg (u8)`: Register address to read from.
+* `max_length (int)`: Maximum length of data to read.
+  
+Returns the number of bytes read and the data as a byte slice.
+____
+#### Function `read_reg(reg u8) (int, []u8)`
+
+Reads a register from the I2C device.
+* `reg (u8)`: Register address to read.
+
+Returns the value read from the register as a byte slice.
+____
+#### Function `write_reg_data(reg u8, data []u8) u32`
+
+Writes data to a register of the I2C device.
+* `reg (u8)`: Register address to write to.
+* `data ([]u8)`: Data to write.
+
+Returns the number of bytes written.
+____
+#### Function `write_reg(reg u8, value u8) u32`
+
+Writes a value to a register of the I2C device.
+* `reg (u8)`: Register address to write to.
+* `value (u8)`: Value to write.
+
+Returns the number of bytes written.
+____
+#### Function `disconnect()`
+Disconnects from the I2C device.
+____
+#### Function `is_forced() bool`
+Checks if the connection to the I2C device was forced.
+Returns `true` if the connection was forced, otherwise `false`.
+____
+#### Functon `is_connected() bool`
+Checks if the connection to the I2C device is established.
+Returns `true` if connected, otherwise `false`.
+____
+#### Function `name() string`
+Gets the name of the I2C device.
+Returns the name of the device.
+____
+#### Function `filename() string`
+Gets the file path of the I2C device.
+Returns the file path of the device.
+____
+#### Function `address() u8`
+Gets the address of the I2C device.
+Returns the address of the device.
+____
+#### Function `fd() int`
+Gets the file descriptor of the I2C device.
+Returns the file descriptor.
+____
+#### Function `str() string`
+Returns a string representation of the I2C device.
+Returns a formatted string representing the device.
+____
+
+## Example
+
+```v
+module main
+
+import time
+import vi2c
+
+fn main() {
+	mut ic2_dev := vi2c.new('/dev/i2c-9', 0x48, 'Temp sensor')
+
+	println(ic2_dev)
+
+	if !ic2_dev.connect(true) {
+		println('Failed to connect')
+		return
+	}
+
+	println(ic2_dev)
+
+	for _ in 1 .. 100 {
+		len, data := ic2_dev.read_data_from_reg(~0, 2)
+
+		if len == 2 {
+			val := 0.00390625 * f32(u32(data[0]) << 8 | u32(data[1]))
+			println('data: <${data.hex()}> temp: ${val} *C')
+		}
+		time.sleep(1000000000)
+	}
+
+	ic2_dev.disconnect()
 }
-data: <182b> temp: 24.16797 *C
-data: <182a> temp: 24.16406 *C
-data: <182a> temp: 24.16406 *C
-data: <182c> temp: 24.17188 *C
-data: <1827> temp: 24.15234 *C
-data: <1823> temp: 24.13672 *C
-data: <1827> temp: 24.15234 *C
-data: <1826> temp: 24.14844 *C
+
 ```
 
-Waveform of I2C signal:
-![](images/image.png)
+## Compile
 
+```sh
+cd ~/.vmodules
+cd vi2c/playground/
+```
 
-## Setup
-Since that my laptop is not equipped with an I2C external port, I had to use an USB to I2C bridge. This bridge device is using  **CH341A**. You have to use this driver [i2c-ch341-usb](https://github.com/allanbian1017/i2c-ch341-usb).
+To compile it for Linux host machine (x64/x86-64), make sure to specify the `include` path:
+```sh
+v -cflags '-I /usr/include/' . -o test_i2c_comm_x64
+```
 
-![](images/setup1.jpg)
-![](images/setup3.jpg)
+To cross-compile it for **Aarch64**, make sure that `aarch64-linux-gnu-gcc` and corresponding libraries are installed. 
+Set `aarch64-linux-gnu-gcc` as `-cc` compiler, disable and add the `include` of **Aarch64** - in this case `/usr/aarch64-linux-gnu/include/`.
+```sh
+v -cc aarch64-linux-gnu-gcc -gc none -cflags '--static -I /usr/aarch64-linux-gnu/include/' test_i2c_comm.v -o test_i2c_comm_aa64
+
+```
