@@ -168,3 +168,5 @@ Set `aarch64-linux-gnu-gcc` as `-cc` compiler, disable and add the `include` of 
 v -cc aarch64-linux-gnu-gcc -gc none -cflags '--static -I /usr/aarch64-linux-gnu/include/' test_i2c_comm.v -o test_i2c_comm_aa64
 
 ```
+
+	NOTE: Please note that the library and the example code are tested in my Ubuntu 20.4 and an Aarch64 machine.
