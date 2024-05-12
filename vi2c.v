@@ -16,6 +16,8 @@ fn C.close(int)
 fn C.ioctl(int, int, voidptr) int
 fn C.fcntl(int, int, int) int
 
+const version = '1.2'
+
 struct I2CDevice {
 mut:
 	m_fd              int
@@ -24,15 +26,17 @@ mut:
 	m_device_filename string
 	m_is_connected    bool
 	m_is_forced       bool
+	m_is_10bit        bool
 }
 
-pub fn new(filename string, addres u8, name string) I2CDevice {
+pub fn new(filename string, addres u8, name string, is_10bit bool) I2CDevice {
 	return I2CDevice{
 		m_device_filename: filename
 		m_device_address: addres
 		m_name: name
 		m_is_connected: false
 		m_is_forced: false
+		m_is_10bit: is_10bit
 		m_fd: -1
 	}
 }
@@ -52,10 +56,18 @@ pub fn (mut d I2CDevice) connect(force_connection bool) bool {
 		d.m_is_forced = true
 		attr = C.I2C_SLAVE_FORCE
 	}
-	rc := C.ioctl(d.m_fd, attr, voidptr(slave_address))
+
+	mut rc := C.ioctl(d.m_fd, attr, voidptr(slave_address))
 	if rc < 0 {
 		C.close(d.m_fd)
 		return false
+	}
+
+	if d.m_is_10bit {
+		rc = C.ioctl(d.m_fd, C.I2C_TENBIT, 1)
+		if rc < 0 {
+			d.m_is_10bit = false
+		}
 	}
 
 	d.m_is_connected = true
@@ -155,13 +167,34 @@ pub fn (d I2CDevice) fd() int {
 	return d.m_fd
 }
 
+pub fn (d I2CDevice) set_retries(retries int) bool {
+	rc := C.ioctl(d.m_fd, C.I2C_RETRIES, retries)
+	if rc < 0 {
+		return false
+	}
+	return true
+}
+
+pub fn (d I2CDevice) set_timeout(timeout_ms int) bool {
+	timeout_10ms := int(timeout_ms / 10)
+	rc := C.ioctl(d.m_fd, C.I2C_TIMEOUT, timeout_10ms)
+	if rc < 0 {
+		return false
+	}
+	return true
+}
+
+pub fn (d I2CDevice) is_10bit() bool {
+	return d.m_is_10bit
+}
+
 pub fn (d I2CDevice) str() string {
 	mut rstr := 'I2C Device {\n'
-	rstr += '\t\"name\":         ${d.m_name},\n'
-	rstr += '\t\"address\":      0x${d.m_device_address.hex()},\n'
-	rstr += '\t\"filename\":     ${d.m_device_filename},\n'
-	rstr += '\t\"is_connected\": ${d.m_is_connected}\n'
-	rstr += '\t\"is_forced\":    ${d.m_is_forced}\n'
+	rstr += "\t\"name\":         ${d.m_name},\n"
+	rstr += "\t\"address\":      0x${d.m_device_address.hex()},\n"
+	rstr += "\t\"filename\":     ${d.m_device_filename},\n"
+	rstr += "\t\"is_connected\": ${d.m_is_connected}\n"
+	rstr += "\t\"is_forced\":    ${d.m_is_forced}\n"
 	rstr += '}'
 
 	return rstr

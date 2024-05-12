@@ -14,17 +14,18 @@ Fields:
 * `m_device_filename (string)`: File path of the I2C device.
 * `m_is_connected (bool)`: Indicates if the device is connected.
 * `m_is_forced (bool)`: Indicates if the connection was forced.
-
+* `m_is_10bit (bool)`: `true` if 10 bit address, otherwise 7 bit address.
 
 ## Functions
 
-#### Function ```new(filename string, address u8, name string) I2CDevice```
+#### Function ```new(filename string, address u8, name string, is_10bit bool) I2CDevice```
 
 Creates a new I2CDevice instance.
 
 * `filename (string)`: File path of the I2C device.
 * `address (u8)`: I2C device address.
 * `name (string)`: Name of the device.
+* `is_10bit (bool)`: `true` if 10 bit address, otherwise 7 bit address.
 
 ____
 #### Function ```connect(force_connection bool) bool```
@@ -110,6 +111,28 @@ ____
 Gets the file descriptor of the I2C device.
 Returns the file descriptor.
 ____
+
+#### Function `set_retries(retries int) bool`
+
+Sets the number of retries for I2C communication.
+* `retries (int)`: The number of retries to set.
+
+Returns `(bool)`: true if the retries were successfully set, otherwise `false`.
+
+----
+#### Function `set_timeout(timeout_ms int) bool`
+Sets the timeout for I2C communication.
+* `timeout_ms (int)`: Timeout value in milliseconds.
+
+Returns `(bool)`: `true` if the timeout was successfully set, otherwise `false`.
+
+----
+#### Function `is_10bit() bool`
+
+Checks if the I2C device address is 10-bit.
+Returns `(bool)`: true if the I2C device address is 10-bit, otherwise `false`.
+
+---- 
 #### Function `str() string`
 Returns a string representation of the I2C device.
 Returns a formatted string representing the device.

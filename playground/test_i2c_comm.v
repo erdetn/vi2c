@@ -4,7 +4,7 @@ import time
 import vi2c
 
 fn main() {
-	mut ic2_dev := vi2c.new('/dev/i2c-9', 0x48, 'Temp sensor')
+	mut ic2_dev := vi2c.new('/dev/i2c-9', 0x48, 'Temp sensor', false)
 
 	println(ic2_dev)
 
