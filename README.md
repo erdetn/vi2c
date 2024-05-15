@@ -18,7 +18,7 @@ Fields:
 
 ## Functions
 
-#### Function ```new(filename string, address u8, name string, is_10bit bool) I2CDevice```
+#### Function `new(filename string, address u8, name string, is_10bit bool) I2CDevice`
 
 Creates a new I2CDevice instance.
 
@@ -28,7 +28,7 @@ Creates a new I2CDevice instance.
 * `is_10bit (bool)`: `true` if 10 bit address, otherwise 7 bit address.
 
 ____
-#### Function ```connect(force_connection bool) bool```
+#### Function `connect(force_connection bool) bool`
 
 Connects to the I2C device.
 
@@ -36,7 +36,7 @@ Connects to the I2C device.
 
 Returns `true` if the connection is successful, otherwise `false`.
 ____
-#### Function ```read_data(max_length int) (int, []u8)```
+#### Function `read_data(max_length int) (int, []u8)`
 
 Reads data from the I2C device.
 
@@ -44,7 +44,7 @@ Reads data from the I2C device.
 
 Returns the number of bytes read and the data as a byte slice.
 ____
-#### Function ```write_data(data []u8) u32```
+#### Function `write_data(data []u8) u32`
 
 Writes data to the I2C device.
 
@@ -52,7 +52,7 @@ Writes data to the I2C device.
 
 Returns the number of bytes written.
 ____
-#### Function ```read_data_from_reg(reg u8, max_length int) (int, []u8)```
+#### Function `read_data_from_reg(reg u8, max_length int) (int, []u8)`
 
 Reads data from a register of the I2C device.
 
@@ -134,8 +134,7 @@ Returns `(bool)`: true if the I2C device address is 10-bit, otherwise `false`.
 
 ---- 
 #### Function `str() string`
-Returns a string representation of the I2C device.
-Returns a formatted string representing the device.
+Returns a formatted string representing the I2C device.
 ____
 
 ## Example

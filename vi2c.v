@@ -29,6 +29,13 @@ mut:
 	m_is_10bit        bool
 }
 
+// Function `new(filename string, address u8, name string, is_10bit bool) I2CDevice`
+// Creates a new I2CDevice instance.
+// * `filename (string)`: File path of the I2C device.
+// * `address (u8)`: I2C device address.
+// * `name (string)`: Name of the device.
+// * `is_10bit (bool)`: `true` if 10 bit address, 
+// otherwise 7 bit address.
 pub fn new(filename string, addres u8, name string, is_10bit bool) I2CDevice {
 	return I2CDevice{
 		m_device_filename: filename
@@ -41,6 +48,12 @@ pub fn new(filename string, addres u8, name string, is_10bit bool) I2CDevice {
 	}
 }
 
+// Function `connect(force_connection bool) bool`
+// Connects to the I2C device.
+// * `force_connection (bool)`: Indicates if the connection 
+//   should be forced. Force (or not) using this slave address, even if it is already in use by a driver.
+// Returns `true` if the connection is successful, 
+// otherwise `false`.
 pub fn (mut d I2CDevice) connect(force_connection bool) bool {
 	d.m_fd = C.open(d.m_device_filename.str, C.O_RDWR)
 
@@ -74,6 +87,10 @@ pub fn (mut d I2CDevice) connect(force_connection bool) bool {
 	return true
 }
 
+// Function `read_data(max_length int) (int, []u8)`
+// Reads data from the I2C device.
+// * `max_length (int)`: Maximum length of data to read.
+// Returns the number of bytes read and the data as a byte slice.
 pub fn (mut d I2CDevice) read_data(max_length int) (int, []u8) {
 	unsafe {
 		mut buf := malloc_noscan(max_length + 1)
@@ -93,6 +110,10 @@ pub fn (mut d I2CDevice) read_data(max_length int) (int, []u8) {
 	}
 }
 
+// Function `write_data(data []u8) u32`
+// Writes data to the I2C device.
+// * `data ([]u8)`: Data to write.
+// Returns the number of bytes written.
 pub fn (mut d I2CDevice) write_data(data []u8) u32 {
 	rc := int(C.write(d.m_fd, voidptr(&data[0]), usize(data.len)))
 
@@ -103,6 +124,11 @@ pub fn (mut d I2CDevice) write_data(data []u8) u32 {
 	return 0
 }
 
+// Function `read_data_from_reg(reg u8, max_length int) (int, []u8)`
+// Reads data from a register of the I2C device.
+// * `reg (u8)`: Register address to read from.
+// * `max_length (int)`: Maximum length of data to read.
+// Returns the number of bytes read and the data as a byte slice.
 pub fn (mut d I2CDevice) read_data_from_reg(reg u8, max_length int) (int, []u8) {
 	if !d.m_is_connected {
 		return 0, []u8{len: 0}
@@ -116,10 +142,19 @@ pub fn (mut d I2CDevice) read_data_from_reg(reg u8, max_length int) (int, []u8) 
 	return d.read_data(max_length)
 }
 
+// Function `read_reg(reg u8) (int, []u8)`
+// Reads a register from the I2C device.
+// * `reg (u8)`: Register address to read.
+// Returns the value read from the register as a byte slice.
 pub fn (mut d I2CDevice) read_reg(reg u8) (int, []u8) {
 	return d.read_data_from_reg(reg, 1)
 }
 
+// Function `write_reg_data(reg u8, data []u8) u32`
+// Writes data to a register of the I2C device.
+// * `reg (u8)`: Register address to write to.
+// * `data ([]u8)`: Data to write.
+// Returns the number of bytes written.
 pub fn (mut d I2CDevice) write_reg_data(reg u8, data []u8) u32 {
 	mut buff := [reg]
 	buff << data
@@ -127,12 +162,19 @@ pub fn (mut d I2CDevice) write_reg_data(reg u8, data []u8) u32 {
 	return d.write_data(buff)
 }
 
+// Function `write_reg(reg u8, value u8) u32`
+// Writes a value to a register of the I2C device.
+// * `reg (u8)`: Register address to write to.
+// * `value (u8)`: Value to write.
+// Returns the number of bytes written.
 pub fn (mut d I2CDevice) write_reg(reg u8, value u8) u32 {
 	mut buff := [reg, value]
 
 	return d.write_data(buff)
 }
 
+// Function `disconnect()`
+// Disconnects from the I2C device.
 pub fn (mut d I2CDevice) disconnect() {
 	if !d.m_is_connected {
 		return
@@ -143,30 +185,53 @@ pub fn (mut d I2CDevice) disconnect() {
 	d.m_is_connected = false
 }
 
+// Function `is_forced() bool`
+// Checks if the connection to the I2C device was forced.
+// Returns `true` if the connection was forced, otherwise `false`.
 pub fn (d I2CDevice) is_forced() bool {
 	return d.m_is_forced
 }
 
+// Functon `is_connected() bool`
+// Checks if the connection to the I2C device is established.
+// Returns `true` if connected, otherwise `false`.
 pub fn (d I2CDevice) is_connected() bool {
 	return d.m_is_connected
 }
 
+// Function `name() string`
+// Gets the name of the I2C device.
+// Returns the name of the device.
 pub fn (d I2CDevice) name() string {
 	return d.m_name
 }
 
+// Function `filename() string`
+// Gets the file path of the I2C device.
+// Returns the file path of the device.
 pub fn (d I2CDevice) filename() string {
 	return d.m_device_filename
 }
 
+// Function `address() u8`
+// Gets the address of the I2C device.
+// Returns the address of the device.
 pub fn (d I2CDevice) address() u8 {
 	return d.m_device_address
 }
 
+// Function `fd() int`
+// Gets the file descriptor of the I2C device.
+// Returns the file descriptor.
 pub fn (d I2CDevice) fd() int {
 	return d.m_fd
 }
 
+// Function `set_retries(retries int) bool`
+// Sets the number of retries for I2C communication.
+// * `retries (int)`: The number of retries to set.
+// Returns `(bool)`: true if the retries were successfully set, 
+// otherwise `false`.
 pub fn (d I2CDevice) set_retries(retries int) bool {
 	rc := C.ioctl(d.m_fd, C.I2C_RETRIES, retries)
 	if rc < 0 {
@@ -175,6 +240,11 @@ pub fn (d I2CDevice) set_retries(retries int) bool {
 	return true
 }
 
+// Function `set_timeout(timeout_ms int) bool`
+// Sets the timeout for I2C communication.
+// * `timeout_ms (int)`: Timeout value in milliseconds.
+// Returns `(bool)`: `true` if the timeout was successfully set, 
+// otherwise `false`.
 pub fn (d I2CDevice) set_timeout(timeout_ms int) bool {
 	timeout_10ms := int(timeout_ms / 10)
 	rc := C.ioctl(d.m_fd, C.I2C_TIMEOUT, timeout_10ms)
@@ -184,10 +254,15 @@ pub fn (d I2CDevice) set_timeout(timeout_ms int) bool {
 	return true
 }
 
+// Function `is_10bit() bool`
+// Checks if the I2C device address is 10-bit.
+// Returns `(bool)`: true if the I2C device address is 10-bit, 
+// otherwise `false`.
 pub fn (d I2CDevice) is_10bit() bool {
 	return d.m_is_10bit
 }
 
+// Returns a formatted string representing the I2C device.
 pub fn (d I2CDevice) str() string {
 	mut rstr := 'I2C Device {\n'
 	rstr += "\t\"name\":         ${d.m_name},\n"
